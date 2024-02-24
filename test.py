@@ -69,7 +69,7 @@ def run():
             with torch.no_grad():
                 ppo.actor_net.eval()
                 a, _ = ppo.actor_net.choose_action(torch.from_numpy(np.array(
-                    now_state).astype(np.float32)).unsqueeze(0).to(device))[0]
+                    now_state).astype(np.float32)).unsqueeze(0).to(device))
             now_state, r, done, _, _ = env.step(a)
             now_state = normalizer(now_state)
             score += r

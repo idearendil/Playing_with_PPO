@@ -55,3 +55,17 @@ class ObservationNormalizer:
         self.std = total_np[self.dim:self.dim*2]
         self.stdd = total_np[self.dim*2:self.dim*3]
         self.n = total_np[-1]
+
+    def combine(self, other):
+        """
+        Combine other ObservationNormalizer to this.
+        """
+        self.mean = (self.mean * self.n + other.mean * other.n) / (
+            self.n + other.n)
+        self.stdd = (self.stdd * self.n + other.stdd * other.n) / (
+                self.n + other.n)
+        self.n += other.n
+        if self.n > 1:
+            self.std = np.sqrt(self.stdd / (self.n - 1))
+        else:
+            self.std = self.mean

@@ -47,18 +47,15 @@ class Ppo:
             [], [], [], [], []
         for a_state, a_action, a_reward, a_mask, a_prob in data:
             state_lst.append(a_state)
-            action_lst.append(a_action)
+            action_lst.append(torch.Tensor(a_action))
             reward_lst.append(a_reward)
             mask_lst.append(a_mask)
-            prob_lst.append(a_prob)
+            prob_lst.append(torch.Tensor(a_prob))
 
         states = torch.Tensor(
             np.array(state_lst, dtype=np.float32)).to(self.device)
-        actions = torch.Tensor(
-            np.array(action_lst, dtype=np.float32)).to(self.device)
         rewards = torch.Tensor(np.array(reward_lst, dtype=np.float32))
         masks = torch.Tensor(np.array(mask_lst, dtype=np.float32))
-        old_probs = torch.Tensor(np.array(prob_lst, dtype=np.float32))
 
         with torch.no_grad():
             self.critic_net.eval()
@@ -67,10 +64,10 @@ class Ppo:
 
         for idx, _ in enumerate(states):
             self.buffer.push((states[idx],
-                              actions[idx],
+                              action_lst[idx],
                               advants[idx],
                               returns[idx],
-                              old_probs[idx]))
+                              prob_lst[idx]))
 
     def train(self):
         """
