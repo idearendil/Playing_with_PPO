@@ -42,7 +42,8 @@ class ObservationNormalizer:
         """
         single_np = np.zeros((1,))
         single_np[0] = self.n
-        total_np = np.concatenate((self.mean, self.std, self.stdd, single_np), axis=0)
+        total_np = np.concatenate(
+            (self.mean, self.std, self.stdd, single_np), axis=0)
         np.save(path + 'observation_normalizer', total_np)
 
     def load(self, path):

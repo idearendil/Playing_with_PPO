@@ -1,5 +1,6 @@
 """
-Start training models by PPO method within Ant-v4 environment of mujoco.
+Start training models by PPO method within Ant-v4 environment of mujoco,
+using ray package to implement multi-learners operating on cpu cores.
 """
 
 import argparse

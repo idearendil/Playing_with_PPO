@@ -2,7 +2,6 @@
 The file of Ppo class.
 """
 
-from pandas.core.generic import dt
 import torch.optim as optim
 import numpy as np
 import torch
@@ -26,6 +25,13 @@ class Ppo:
         )
         self.critic_loss_func = torch.nn.MSELoss()
         self.buffer = ReplayBuffer(BUFFER_SIZE)
+
+    def models_to_device(self, device):
+        """
+        Move actor and critic to the specific device('cpu' or 'cuda:x')
+        """
+        self.actor_net.to(device)
+        self.critic_net.to(device)
 
     def push_an_episode(self, data):
         """
@@ -60,8 +66,11 @@ class Ppo:
             returns, advants = self.get_gae(rewards, masks, values.cpu())
 
         for idx, _ in enumerate(states):
-            self.buffer.push((
-                states[idx], actions[idx], advants[idx], returns[idx], old_probs[idx]))
+            self.buffer.push((states[idx],
+                              actions[idx],
+                              advants[idx],
+                              returns[idx],
+                              old_probs[idx]))
 
     def train(self):
         """
@@ -72,7 +81,8 @@ class Ppo:
         self.critic_net.train()
         for _ in range(BATCH_NUM):
 
-            states, actions, advants, returns, old_probs = self.buffer.pull(BATCH_SIZE)
+            states, actions, advants, returns, old_probs = self.buffer.pull(
+                BATCH_SIZE)
             states = torch.stack(states).to(self.device)
             actions = torch.stack(actions).to(self.device)
             advants = torch.stack(advants).unsqueeze(1).to(self.device)

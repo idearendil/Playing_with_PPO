@@ -13,13 +13,22 @@ from observation_normalizer import ObservationNormalizer
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "--env_name", type=str, default="Ant-v4", help="name of Mujoco environement"
+    "--env_name",
+    type=str,
+    default="Ant-v4",
+    help="name of Mujoco environement"
 )
 parser.add_argument(
-    "--model_path", type=str, default="./models/", help="where models are saved"
+    "--model_path",
+    type=str,
+    default="./models/",
+    help="where models are saved"
 )
 parser.add_argument(
-    "--episode_num", type=int, default=100, help="How many times to test"
+    "--episode_num",
+    type=int,
+    default=100,
+    help="How many times to test"
 )
 
 args = parser.parse_args()
@@ -58,9 +67,9 @@ def run():
             env.render()
 
             with torch.no_grad():
-                    ppo.actor_net.eval()
-                    a = ppo.actor_net.choose_action(torch.from_numpy(
-                        np.array(now_state).astype(np.float32)).unsqueeze(0).to(device))[0]
+                ppo.actor_net.eval()
+                a, _ = ppo.actor_net.choose_action(torch.from_numpy(np.array(
+                    now_state).astype(np.float32)).unsqueeze(0).to(device))[0]
             now_state, r, done, _, _ = env.step(a)
             now_state = normalizer(now_state)
             score += r
