@@ -16,7 +16,10 @@ from observation_normalizer import ObservationNormalizer
 
 parser = argparse.ArgumentParser()
 parser.add_argument(
-    "--env_name", type=str, default="Ant-v4", help="name of Mujoco environement"
+    "--env_name",
+    type=str,
+    default="Ant-v4",
+    help="name of Mujoco environement"
 )
 parser.add_argument(
     "--conitinue_training",
@@ -25,7 +28,10 @@ parser.add_argument(
     help="whether to continue training with existing models",
 )
 parser.add_argument(
-    "--model_path", type=str, default="./models/", help="where models are saved"
+    "--model_path",
+    type=str,
+    default="./models/",
+    help="where models are saved"
 )
 args = parser.parse_args()
 
@@ -46,7 +52,9 @@ def run():
     torch.manual_seed(500)
     np.random.seed(500)
 
-    with open("log_" + args.env_name + ".csv", "a", encoding="utf-8") as outfile:
+    with open("log_" + args.env_name + ".csv",
+              "a",
+              encoding="utf-8") as outfile:
         outfile.write("episode_id,score\n")
 
     ppo = Ppo(s_dim, a_dim, device)
@@ -63,6 +71,7 @@ def run():
         scores = []
         steps_in_cycle = 0
         episode_memory = []
+        ppo.buffer.buffer.clear()               # off-policy? on-policy?
         while steps_in_cycle < MIN_STEPS_IN_CYCLE:
             episode_id += 1
             now_state = normalizer(env.reset(seed=500))
@@ -72,16 +81,18 @@ def run():
 
                 with torch.no_grad():
                     ppo.actor_net.eval()
-                    a = ppo.actor_net.choose_action(torch.from_numpy(
-                        np.array(now_state).astype(np.float32)).unsqueeze(0).to(device))[0]
-                next_state, r, done, _, _ = env.step(a)
-                next_state = normalizer(next_state)
+                    state_tensor = torch.from_numpy(np.array(
+                        now_state).astype(np.float32)).unsqueeze(0).to(device)
+                    a, a_prob = ppo.actor_net.choose_action(state_tensor)
 
-                mask = (1 - done) * 1
-                episode_memory.append([now_state, a, r, mask])
+                    next_state, r, done, _, _ = env.step(a)
+                    next_state = normalizer(next_state)
 
-                score += r
-                now_state = next_state
+                    mask = (1 - done) * 1
+                    episode_memory.append([now_state, a, r, mask, a_prob])
+
+                    score += r
+                    now_state = next_state
 
                 if done:
                     break

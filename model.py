@@ -51,11 +51,14 @@ class Actor(nn.Module):
         Args:
             s: current observation
         Returns:
-            action tensor sampled from policy(normal distribution)
+            action tensor sampled from policy(normal distribution),
+            log probability of the action
         """
         mu, sigma = self.forward(s)
         pi = self.distribution(mu, sigma)
-        return pi.sample().cpu().numpy()
+        an_action = pi.sample().squeeze()
+        action_prob = pi.log_prob(an_action).sum(1, keepdim=True).squeeze(0)
+        return an_action.cpu().numpy(), action_prob.cpu()
 
 
 class Critic(nn.Module):

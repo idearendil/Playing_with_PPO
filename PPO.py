@@ -37,12 +37,14 @@ class Ppo:
             None
         """
 
-        state_lst, action_lst, reward_lst, mask_lst = [], [], [], []
-        for a_state, a_action, a_reward, a_mask in data:
+        state_lst, action_lst, reward_lst, mask_lst, prob_lst = \
+            [], [], [], [], []
+        for a_state, a_action, a_reward, a_mask, a_prob in data:
             state_lst.append(a_state)
             action_lst.append(a_action)
             reward_lst.append(a_reward)
             mask_lst.append(a_mask)
+            prob_lst.append(a_prob)
 
         states = torch.Tensor(
             np.array(state_lst, dtype=np.float32)).to(self.device)
@@ -50,17 +52,12 @@ class Ppo:
             np.array(action_lst, dtype=np.float32)).to(self.device)
         rewards = torch.Tensor(np.array(reward_lst, dtype=np.float32))
         masks = torch.Tensor(np.array(mask_lst, dtype=np.float32))
+        old_probs = torch.Tensor(np.array(prob_lst, dtype=np.float32))
 
         with torch.no_grad():
             self.critic_net.eval()
-            self.actor_net.eval()
-
             values = self.critic_net(states)
             returns, advants = self.get_gae(rewards, masks, values.cpu())
-
-            old_mus, old_stds = self.actor_net(states)
-            old_pis = self.actor_net.distribution(old_mus, old_stds)
-            old_probs = old_pis.log_prob(actions).sum(1, keepdim=True).detach().cpu()
 
         for idx, _ in enumerate(states):
             self.buffer.push((
